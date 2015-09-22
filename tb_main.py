@@ -210,10 +210,11 @@ def make_down_list(tieba):
             cid=cid_s[i][0]
             a_cid_list=get_list(cid,tieba)
             all_jp=all_jp-set(a_cid_list)
-        print("查找未分类精品#")
-        make_cid_index("0",list(all_jp),tieba)#制作索引文件
-        for i in list(all_jp):
-                ilist.append((0,i[0],i[1],i[2]))
+        if len(all_jp)!=0:
+            print("查找未分类精品#")
+            make_cid_index("0",list(all_jp),tieba)#制作索引文件
+            for i in list(all_jp):
+                    ilist.append((0,i[0],i[1],i[2]))
     return ilist
 
 def down_pub_src(path):
