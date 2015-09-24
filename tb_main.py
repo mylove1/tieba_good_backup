@@ -81,8 +81,8 @@ def get_list(cid,tieba):
     return mes
 
 def do_page(src,page,path,pic_quality,dict_src):
-    '''处理一个页面,参数分别为:资源文件url列表, 页面, 页面序号, 保存文件的基础路径, 图片质量
-    使用两个目录,分别存储css,js和图片,文件使用数字顺序命名
+    '''处理一个页面,参数分别为:资源文件url列表, 页面, 保存文件的基础路径, 图片质量
+    使用一个目录图片,文件使用数字顺序命名
     任务包括:保存资源文件,替换资源和页数链接,删除垃圾信息'''
     media_dir=path+"img/"    
     if  not os.path.exists(media_dir):
@@ -156,6 +156,7 @@ def down_one_tz(tb_code,mydir,only_lz=False,pic_quality=True):
         print("==%s 的第 %d 页,共 %d 页==" % (tb_code,page_count,page_sum))
 
 def make_main_index(cids,tieba):
+    '''制作主索引文件'''
     mydir=tieba+"_精品/"
     if  not os.path.exists(mydir):os.mkdir(mydir)
     f=open(mydir+"index.html","w",encoding="utf-8")
@@ -167,6 +168,7 @@ def make_main_index(cids,tieba):
     return
 
 def make_cid_index(cid,cid_list,tieba):
+    '''某个分类的索引'''
     mydir=tieba+"_精品/%s/" % cid
     if  not os.path.exists(mydir):os.makedirs(mydir)
     f=open(mydir+"index.html","w",encoding="utf-8")
