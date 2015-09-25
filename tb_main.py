@@ -155,7 +155,7 @@ def down_one_tz(tb_code,mydir,only_lz=False,pic_quality=True):
         saveStr(to_page,root_dir+"pn_%d.html" % page_count)
         print("==%s 的第 %d 页,共 %d 页==" % (tb_code,page_count,page_sum))
 
-def make_main_index(cids,tieba):
+def make_main_index(cids,tieba,has0):
     '''制作主索引文件'''
     mydir=tieba+"_精品/"
     if  not os.path.exists(mydir):os.mkdir(mydir)
@@ -163,7 +163,7 @@ def make_main_index(cids,tieba):
     f.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>贴吧精品</title><style type="text/css">#main{width:500px;color: #000;text-align:center;margin: 0 auto;}h2{margin-top:auto;text-align:center;}p{margin-top:25px;font-size: 18px;}</style></head><body><h2>%s吧精品贴分类</h2><div id=main>' % tieba)
     for i in cids:
         f.write('<p><a target="_blank" href="%s/index.html">%s</a></p>' % (i[0],i[1]))
-    f.write('<p><a target="_blank" href="%s/index.html">%s</a></p>' % (0,"未分类精品"))
+        if has0==1:f.write('<p><a target="_blank" href="%s/index.html">%s</a></p>' % (0,"未分类精品"))
     f.write('</div></body></html>')
     return
 
@@ -191,14 +191,15 @@ def make_down_list(tieba):
     for i in cid_s:
         print(i[0]+" - "+i[1])
     print("0 - 未分类精品贴\n")
+    has0=0;
     cids_down=get_list_from_stdin("输入你想下载的分类编号")
-    if '0' in cids_down:all_jp=set(get_list(0,tieba))
+    if '0' in cids_down:all_jp=set(get_list(0,tieba));has0=1;
     else:all_jp=set()
     cid_s_new=[]
     for i in cids_down:
         for j in range(len(cid_s)):
             if cid_s[j][0]==str(i):cid_s_new.append((cid_s[j][0],cid_s[j][1]))
-    make_main_index(cid_s_new,tieba)  #制作索引文件
+    make_main_index(cid_s_new,tieba,has0)  #制作索引文件
     ilist=[]
     for i in range(len(cid_s_new)):
         cid=cid_s_new[i][0]
