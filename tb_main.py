@@ -116,7 +116,7 @@ def do_page(src, page, path, pic_quality, dict_src,page_count):
             if i in PUB_SRC:
                 jsName = "../../pub/" + str(PUB_SRC[i]) + ".js"
                 page = page.replace(i, jsName.replace(path, ""))
-        elif ('jpg' in i or 'gif' in i or 'png' in i or 'jpeg' in i) and ('http://' in i) and '/forum/pic/item/' not in i and '/tb/cms' not in i and 'http://img02.taobaocdn.com' not in i:
+        elif ('jpg' in i or 'gif' in i or 'png' in i or 'jpeg' in i) and ('http://' in i) and '/forum/pic/item/' not in i and '/tb/cms' not in i and 'taobaocdn.com' not in i:
             if i not in dict_src[0]:
                 if ("sign=" in i and pic_quality == True):
                     reGq = re.compile(r'.*/')
@@ -207,6 +207,7 @@ def make_main_index(cids, tieba, has0):
             '<p><a target="_blank" href="%s/index.html">%s</a></p>' %
             (0, "未分类精品"))
     f.write('</div></body></html>')
+    f.close()
     return
 
 
@@ -225,6 +226,7 @@ def make_cid_index(cid, cid_list, tieba):
             '<p><a target="_blank" href="http://tieba.baidu.com/p/%s">:原始链接</a>作者:%s : <a target="_blank" href="p_%s/pn_1.html">%s</a></p>' %
             (i[0], i[1], i[0], i[2]))
     f.write('</div></body></html>')
+    f.close()
     return
 
 
