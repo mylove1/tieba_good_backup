@@ -14,6 +14,8 @@ socket.setdefaulttimeout(20)
 HIQ = False
 LZ = True
 
+f_log = open("last.log", "w", encoding="utf-8")
+
 # 全局变量,一个公共资源字典
 PUB_SRC = {}
 
@@ -89,13 +91,14 @@ def get_list(cid, tieba):
     return mes
 
 
-def do_page(src, page, path, pic_quality, dict_src):
+def do_page(src, page, path, pic_quality, dict_src,page_count):
     '''处理一个页面,参数分别为:资源文件url列表, 页面, 保存文件的基础路径, 图片质量
     使用一个目录图片,文件使用数字顺序命名
     任务包括:保存资源文件,替换资源和页数链接,删除垃圾信息'''
+    
     media_dir = path + "img/"
-    if not os.path.exists(media_dir):
-        os.mkdir(media_dir)
+    if page_count==1:
+        if not os.path.exists(media_dir):os.mkdir(media_dir)
     page = page.replace("pb_list_pager", "")  # 禁止页码奇怪的跳转
     login_remind = re.compile(
         r'(?<=</div></div></div>)<div.*?id="guide_fc".*?</div></div>')
@@ -113,7 +116,7 @@ def do_page(src, page, path, pic_quality, dict_src):
             if i in PUB_SRC:
                 jsName = "../../pub/" + str(PUB_SRC[i]) + ".js"
                 page = page.replace(i, jsName.replace(path, ""))
-        elif ('jpg' in i or 'gif' in i or 'png' in i or 'jpeg' in i) and ('http://' in i) and '/forum/pic/item/' not in i and '/tb/cms' not in i:
+        elif ('jpg' in i or 'gif' in i or 'png' in i or 'jpeg' in i) and ('http://' in i) and '/forum/pic/item/' not in i and '/tb/cms' not in i and 'http://img02.taobaocdn.com' not in i:
             if i not in dict_src[0]:
                 if ("sign=" in i and pic_quality == True):
                     reGq = re.compile(r'.*/')
@@ -126,14 +129,21 @@ def do_page(src, page, path, pic_quality, dict_src):
                 try:
                     urllib.request.urlretrieve(imggq, imgName)
                 except:
-                    print("a img wrong ,but ignore.")
+                    print("一个图片错误，记录在last.log")
+                    f_log.write("下载错误："+imggq+'\n')
                 dict_src[0][i] = imgName
                 dict_src[1] = dict_src[1] + 1
             else:
                 imgName = dict_src[0][i]
             page = page.replace(i, imgName.replace(path, ""))
+    saveStr(page, path + "pn_%d.html" % page_count)
+    #print("第 %d 页" % page_count)
     return page
 
+def down_from_queue(q):
+    while not q.empty():
+        i = q.get()
+        do_page(*i)
 
 def down_one_tz(tb_code, mydir, only_lz=False, pic_quality=True):
     '''下载一整个帖子,参数:贴子号码, 根目录, 是否只看楼主, 是否使用高质量图片
@@ -161,15 +171,22 @@ def down_one_tz(tb_code, mydir, only_lz=False, pic_quality=True):
     root_dir = mydir + "p_%s/" % tb_code
     if not os.path.exists(root_dir):
         os.mkdir(root_dir)
+    epage = queue.Queue(maxsize=0)
     for page_count in range(1, 1 + page_sum):
         url = base_url + str(page_count)
         main_page = get_html(url)
         tb_media = re.compile(
             r'(?<=src=").*?(?=")|(?<=href=").*?(?=")|(?<=data-tb-lazyload=").*?(?=")')
         rel = tb_media.findall(main_page)
-        to_page = do_page(rel, main_page, root_dir, pic_quality, dict_src)
-        saveStr(to_page, root_dir + "pn_%d.html" % page_count)
+        epage.put((rel, main_page, root_dir, pic_quality, dict_src,page_count))
+        #to_page = do_page(rel, main_page, root_dir, pic_quality, dict_src,page_count)
+        #saveStr(to_page, root_dir + "pn_%d.html" % page_count)
         print("==%s 的第 %d 页,共 %d 页==" % (tb_code, page_count, page_sum))
+    for i in range(10):
+        tmp = threading.Thread(target=down_from_queue, args=(epage,))
+        tmp.start()
+    
+        
 
 
 def make_main_index(cids, tieba, has0):
@@ -185,10 +202,10 @@ def make_main_index(cids, tieba, has0):
         f.write(
             '<p><a target="_blank" href="%s/index.html">%s</a></p>' %
             (i[0], i[1]))
-        if has0 == 1:
-            f.write(
-                '<p><a target="_blank" href="%s/index.html">%s</a></p>' %
-                (0, "未分类精品"))
+    if has0 == 1:
+        f.write(
+            '<p><a target="_blank" href="%s/index.html">%s</a></p>' %
+            (0, "未分类精品"))
     f.write('</div></body></html>')
     return
 
@@ -270,21 +287,23 @@ def down_pub_src(path):
             cssName = path + str(cNum) + ".css"
             PUB_SRC[i] = cNum
             urllib.request.urlretrieve(i, cssName)
+            print("下载了%d.css" % cNum)
             cNum = cNum + 1
         elif ".js" in i:
             jsName = path + str(jNum) + ".js"
             PUB_SRC[i] = jNum
             urllib.request.urlretrieve(i, jsName)
+            print("下载了%d.js" % jNum)
             jNum = jNum + 1
+            
 
 
-def down_from_queue(q, tieba):
+def down_from_queue_tz(q, tieba):
     while not q.empty():
         i = q.get()
         tb_code = i[1]
         mydir = tieba + "_精品/%s/" % i[0]
         down_one_tz(tb_code, mydir, LZ, HIQ)
-
 
 def down_tieba(tieba):
     down_list = make_down_list(tieba)
@@ -293,32 +312,25 @@ def down_tieba(tieba):
         len(down_list))
     if not os.path.exists(tieba + "_精品/pub/"):
         os.makedirs(tieba + "_精品/pub/")
+    print("下载公共资源")
     down_pub_src(tieba + "_精品/pub/")
-    print("创建任务队列")
+    print("公共资源完成")
     qdown = queue.Queue(maxsize=0)
     for i in down_list:
+        #tb_code = i[1]
+        #mydir = tieba + "_精品/%s/" % i[0]
+        #down_one_tz(tb_code, mydir, LZ, HIQ)
         qdown.put(i)
 
     qs = queue.Queue(maxsize=0)
     ls_xc = []
     print("创建下载线程")
-    for i in range(30):
-        tmp = threading.Thread(target=down_from_queue, args=(qdown, tieba))
+    for i in range(10):
+        tmp = threading.Thread(target=down_from_queue_tz, args=(qdown, tieba))
         tmp.start()
         ls_xc.append(tmp)
     print("创建完成")
-    while True:
-        is_ok = 1
-        for i in ls_xc:
-            if i.is_alive():
-                is_ok = 0
-        if(is_ok == 1):
-            input(
-                "程序结束,如果没有严重错误，用浏览器打开文件：\n\n %s \n\n任意键退出" %
-                os.path.abspath(
-                    '%s_精品/index.html' %
-                    tieba))
-            sys.exit()
+
 
 if __name__ == "__main__":
     tieba = input("贴吧名称:（不要带最后的”吧“字）:")
