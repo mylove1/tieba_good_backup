@@ -13,6 +13,6 @@
 
 进入下载页面下载 Windows x86 executable installer 
 
-安装完成后应该已经进行了文件关联，双击tb_main.py或者在cmd下用 python tb_main.py来运行
+安装完成后应该已经进行了文件关联，双击tb_main.py或者在cmd下用 python tb_main.py来运行程序
 
 veekxt@gmail.com
