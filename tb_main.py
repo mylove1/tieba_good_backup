@@ -53,7 +53,6 @@ def get_cid(tieba):
 def get_list(cid, tieba):
     '''从指定贴吧和分类(cid)获取帖子列表'''
     tieba_name_url = urllib.parse.quote(tieba)
-    #url="http://tieba.baidu.com/f?%s&tab=good&cid=%d" % (tieba_name_url,cid)
     url = "http://tieba.baidu.com/f/good?kw=%s&ie=utf-8&cid=%s" % (
         tieba_name_url, cid)
     page = get_html(url, "utf-8")
@@ -62,7 +61,7 @@ def get_list(cid, tieba):
     if len(max_pn) != 0:
         max_pn = int(max_pn[0])
     else:
-        max_pn = 0  # print('only one page')
+        max_pn = 0
     rel_lst = []
     # 匹配区域,包含了作者,标题,帖子id
     tieba_list = re.compile(r'<a href="/p/.+?"\stitle=".+?".+?title=".+?"')
@@ -137,7 +136,6 @@ def do_page(src, page, path, pic_quality, dict_src,page_count):
                 imgName = dict_src[0][i]
             page = page.replace(i, imgName.replace(path, ""))
     saveStr(page, path + "pn_%d.html" % page_count)
-    #print("第 %d 页" % page_count)
     return page
 
 def down_from_queue(q):
@@ -165,7 +163,6 @@ def down_one_tz(tb_code, mydir, only_lz=False, pic_quality=True):
             pass
         print("你开启了只看楼主但一楼被删除,取消一个只看楼主http://tieba.baidu.com/p/%s" % tb_code)
         down_one_tz(tb_code, mydir, False, HIQ)
-        # print(main_page)
         return
     dict_src = [{}, 0]
     root_dir = mydir + "p_%s/" % tb_code
@@ -179,16 +176,12 @@ def down_one_tz(tb_code, mydir, only_lz=False, pic_quality=True):
             r'(?<=src=").*?(?=")|(?<=href=").*?(?=")|(?<=data-tb-lazyload=").*?(?=")')
         rel = tb_media.findall(main_page)
         epage.put((rel, main_page, root_dir, pic_quality, dict_src,page_count))
-        #to_page = do_page(rel, main_page, root_dir, pic_quality, dict_src,page_count)
-        #saveStr(to_page, root_dir + "pn_%d.html" % page_count)
         print("==%s 的第 %d 页,共 %d 页==" % (tb_code, page_count, page_sum))
     for i in range(10):
         tmp = threading.Thread(target=down_from_queue, args=(epage,))
         tmp.start()
     
         
-
-
 def make_main_index(cids, tieba, has0):
     '''制作主索引文件'''
     mydir = tieba + "_精品/"
@@ -299,7 +292,6 @@ def down_pub_src(path):
             jNum = jNum + 1
             
 
-
 def down_from_queue_tz(q, tieba):
     while not q.empty():
         i = q.get()
@@ -319,9 +311,6 @@ def down_tieba(tieba):
     print("公共资源完成")
     qdown = queue.Queue(maxsize=0)
     for i in down_list:
-        #tb_code = i[1]
-        #mydir = tieba + "_精品/%s/" % i[0]
-        #down_one_tz(tb_code, mydir, LZ, HIQ)
         qdown.put(i)
 
     qs = queue.Queue(maxsize=0)
