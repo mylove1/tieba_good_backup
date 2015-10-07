@@ -271,7 +271,7 @@ def make_down_list(tieba):
 
 
 def down_pub_src(path):
-    page = get_html("http://tieba.baidu.com/p/3318919984")
+    page = get_html("http://tieba.baidu.com/p/4087941653")
     tb_media = re.compile(
         r'(?<=src=").*?(?=")|(?<=href=").*?(?=")|(?<=data-tb-lazyload=").*?(?=")')
     src_l = tb_media.findall(page)
