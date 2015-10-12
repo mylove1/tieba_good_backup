@@ -15,4 +15,4 @@
 
 安装完成后应该已经进行了文件关联，双击tb_main.py或者在cmd下用 python tb_main.py来运行程序
 
-veekxt@gmail.com
+veekxt@gmail.com ，2015-09
