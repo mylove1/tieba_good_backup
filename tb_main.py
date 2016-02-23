@@ -101,7 +101,10 @@ def do_page(src, page, path, pic_quality, dict_src,page_count):
     page = page.replace("pb_list_pager", "")  # 禁止页码奇怪的跳转
     login_remind = re.compile(
         r'(?<=</div></div></div>)<div.*?id="guide_fc".*?</div></div>')
-    page = page.replace(login_remind.search(page).group(), "")  # 删除未登录提示
+    try:
+        page = page.replace(login_remind.search(page).group(), "")  # 删除未登录提示
+    except:
+        pass
     for i in src:
         if "&pn=" in i or "?pn=" in i:
             pn = int(i.split("=")[-1])
